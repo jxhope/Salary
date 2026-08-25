@@ -1,0 +1,624 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.mapper.SalaryMapper">
+    <!-- ===================================================== -->
+    <!-- 工资基础查询 -->
+    <!-- ===================================================== -->
+    <!-- 统计当月工资总记录 -->
+    <select id="Scount" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM salary
+        WHERE salary_month = DATE_FORMAT(NOW(), '%Y-%m')
+    </select>
+    <!-- 分页查询当月工资记录 -->
+    <select id="Slist" resultType="com.example.demo.pojo.salary">
+        SELECT
+        s.base_salary,
+        s.bonus,
+        s.deduction,
+        s.real_salary,
+        s.employee_id AS id,
+        e.name,
+        d.department_name AS department
+        FROM salary s
+        JOIN employee e
+        ON e.id = s.employee_id
+        JOIN department d
+        ON e.department_id = d.id
+        WHERE s.salary_month = DATE_FORMAT(NOW(), '%Y-%m')
+        ORDER BY s.id DESC
+        LIMIT #{start}, #{pageSize}
+    </select>
+
+
+    <!-- 查询全部工资记录 -->
+    <select id="findAll" resultType="com.example.demo.pojo.salary">
+        SELECT
+        salary.employee_id,
+        e.name,
+        salary.salary_month,
+        salary.attendance_days,
+        salary.base_salary,
+        salary.bonus,
+        salary.deduction,
+        salary.tax,
+        salary.real_salary,
+        salary.salary_status,
+        salary.create_time
+        FROM salary
+        JOIN employee e
+        ON salary.employee_id = e.id
+    </select>
+
+
+    <!-- 增加工资 -->
+    <insert id="add"
+            parameterType="com.example.demo.pojo.salary">
+        INSERT INTO salary (
+        employee_id,
+        salary_month,
+        attendance_days,
+        base_salary,
+        bonus,
+        deduction,
+        tax,
+        real_salary,
+        salary_status,
+        create_time
+        )
+        VALUES (
+        #{employeeId},
+        #{salaryMonth},
+        #{attendanceDays},
+        #{baseSalary},
+        #{bonus},
+        #{deduction},
+        #{tax},
+        #{realSalary},
+        #{salaryStatus},
+        #{createTime}
+        )
+    </insert>
+
+
+    <!-- ===================================================== -->
+    <!-- 奖金 -->
+    <!-- ===================================================== -->
+
+    <!-- 查询奖金 -->
+    <select id="bonusList"
+            resultType="com.example.demo.pojo.bonus">
+        SELECT
+        bonus.id,
+        bonus.employee_id,
+        employee.name AS name,
+        bonus.bonus_month,
+        bonus.bonus_type,
+        bonus.money,
+        bonus.remark
+        FROM bonus
+        JOIN employee
+        ON bonus.employee_id = employee.id
+    </select>
+
+
+    <!-- 新增奖金 -->
+    <insert id="addBonus"
+            parameterType="com.example.demo.pojo.bonus">
+        INSERT INTO bonus (
+        employee_id,
+        bonus_month,
+        bonus_type,
+        money,
+        remark
+        )
+        VALUES (
+        #{employeeId},
+        #{bonusMonth},
+        #{bonusType},
+        #{money},
+        #{remark}
+        )
+    </insert>
+
+
+    <!-- 修改奖金 -->
+    <update id="updateBonus"
+            parameterType="com.example.demo.pojo.bonus">
+        UPDATE bonus
+        SET
+        bonus_month = #{bonusMonth},
+        bonus_type = #{bonusType},
+        money = #{money},
+        remark = #{remark}
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- 删除奖金 -->
+    <delete id="deleteBonus">
+        DELETE FROM bonus
+        WHERE id = #{id}
+    </delete>
+
+
+    <!-- ===================================================== -->
+    <!-- 扣款 -->
+    <!-- ===================================================== -->
+
+    <!-- 查询扣款 -->
+    <select id="deductionList"
+            resultType="com.example.demo.pojo.deduction">
+        SELECT
+        deduction.id,
+        deduction.employee_id,
+        employee.name AS name,
+        deduction.deduction_month,
+        deduction.deduction_type,
+        deduction.money,
+        deduction.remark
+        FROM deduction
+        JOIN employee
+        ON deduction.employee_id = employee.id
+    </select>
+
+
+    <!-- 新增扣款 -->
+    <insert id="addDeduction"
+            parameterType="com.example.demo.pojo.deduction">
+        INSERT INTO deduction (
+        employee_id,
+        deduction_month,
+        deduction_type,
+        money,
+        remark
+        )
+        VALUES (
+        #{employeeId},
+        #{deductionMonth},
+        #{deductionType},
+        #{money},
+        #{remark}
+        )
+    </insert>
+
+
+    <!-- 修改扣款 -->
+    <update id="updateDeduction"
+            parameterType="com.example.demo.pojo.deduction">
+        UPDATE deduction
+        SET
+        deduction_month = #{deductionMonth},
+        deduction_type = #{deductionType},
+        money = #{money},
+        remark = #{remark}
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- 删除扣款 -->
+    <delete id="deleteDeduction">
+        DELETE FROM deduction
+        WHERE id = #{id}
+    </delete>
+
+
+    <!-- ===================================================== -->
+    <!-- 工资分页 -->
+    <!-- ===================================================== -->
+
+    <!-- 工资总数 -->
+    <select id="count"
+            resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM salary s
+        JOIN employee e
+        ON s.employee_id = e.id
+        JOIN bank_card b
+        ON e.id = b.employee_id
+        <where>
+            <if test="employeeId != null">
+                s.employee_id = #{employeeId}
+            </if>
+        </where>
+    </select>
+
+
+    <!-- 分页查询工资 -->
+    <select id="list"
+            resultType="com.example.demo.pojo.salary">
+        SELECT
+        s.*,
+        b.card_no AS cardNo,
+        e.name AS Name
+        FROM salary s
+        JOIN employee e
+        ON s.employee_id = e.id
+        JOIN bank_card b
+        ON e.id = b.employee_id
+        <where>
+            <if test="employeeId != null">
+                s.employee_id = #{employeeId}
+            </if>
+        </where>
+        ORDER BY s.create_time
+        LIMIT #{start}, #{pageSize}
+    </select>
+
+
+    <!-- ===================================================== -->
+    <!-- 银行卡 -->
+    <!-- ===================================================== -->
+
+    <!-- 查询银行卡 -->
+    <select id="getCardNo"
+            resultType="com.example.demo.pojo.card">
+        SELECT
+        b.employee_id,
+        e.name AS employeeName,
+        b.card_no AS bankCardNo,
+        b.bank_name AS bankName
+        FROM bank_card b
+        JOIN employee e
+        ON b.employee_id = e.id
+        WHERE b.employee_id = #{employeeId}
+    </select>
+
+
+    <!-- 新增银行卡 -->
+    <insert id="Cardadd"
+            parameterType="com.example.demo.pojo.card">
+        INSERT INTO bank_card (
+        employee_id,
+        card_no,
+        bank_name,
+        create_time
+        )
+        VALUES (
+        #{employeeId},
+        #{bankCardNo},
+        #{bankName},
+        #{createTime}
+        )
+    </insert>
+
+
+    <!-- 修改工资状态 -->
+    <update id="updateStatus">
+        UPDATE salary
+        SET salary_status = '已发放'
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- ===================================================== -->
+    <!-- 工资统计 -->
+    <!-- ===================================================== -->
+
+    <!-- 已发放工资数量 -->
+    <select id="countPaid"
+            resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM salary
+        WHERE salary_status = '已发放'
+    </select>
+
+
+    <!-- 待发放工资数量 -->
+    <select id="countUnpaid"
+            resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM salary
+        WHERE salary_status != '已发放'
+    </select>
+
+
+    <!-- 发放总金额 -->
+    <select id="totalSalary"
+            resultType="java.lang.Double">
+        SELECT SUM(real_salary)
+        FROM salary
+    </select>
+
+
+    <!-- 本月工资统计 -->
+    <select id="getTotalSummary"
+            resultType="com.example.demo.pojo.summary">
+
+        SELECT
+        IFNULL(SUM(base_salary), 0) AS salary,
+        IFNULL(SUM(bonus), 0) AS bonus,
+        IFNULL(SUM(deduction), 0) AS deduction
+        FROM salary
+        WHERE DATE_FORMAT(create_time, '%Y-%m')
+        = DATE_FORMAT(NOW(), '%Y-%m')
+
+    </select>
+
+
+    <!-- 获取工资月份 -->
+    <select id="getMonthList"
+            resultType="java.lang.String">
+
+        SELECT DISTINCT
+        DATE_FORMAT(create_time, '%Y-%m')
+        FROM salary
+        ORDER BY DATE_FORMAT(create_time, '%Y-%m')
+
+    </select>
+
+
+    <!-- 每月基础工资 -->
+    <select id="getMonthlySalary"
+            resultType="java.lang.Double">
+
+        SELECT
+        IFNULL(SUM(base_salary), 0)
+        FROM salary
+        GROUP BY DATE_FORMAT(create_time, '%Y-%m')
+        ORDER BY DATE_FORMAT(create_time, '%Y-%m')
+
+    </select>
+
+
+    <!-- 每月奖金 -->
+    <select id="getMonthlyBonus"
+            resultType="java.lang.Double">
+
+        SELECT
+        IFNULL(SUM(bonus), 0)
+        FROM salary
+        GROUP BY DATE_FORMAT(create_time, '%Y-%m')
+        ORDER BY DATE_FORMAT(create_time, '%Y-%m')
+
+    </select>
+
+
+    <!-- 每月扣款 -->
+    <select id="getMonthlyDeduction"
+            resultType="java.lang.Double">
+
+        SELECT
+        IFNULL(SUM(deduction), 0)
+        FROM salary
+        GROUP BY DATE_FORMAT(create_time, '%Y-%m')
+        ORDER BY DATE_FORMAT(create_time, '%Y-%m')
+
+    </select>
+
+
+    <!-- ===================================================== -->
+    <!-- 部门工资报表 -->
+    <!-- ===================================================== -->
+
+    <select id="getDepartmentReport"
+            resultType="map">
+
+        SELECT
+        d.department_name AS department,
+        COUNT(DISTINCT e.id) AS people,
+        SUM(s.base_salary) AS salary,
+        SUM(s.bonus) AS bonus,
+        SUM(s.deduction) AS deduction,
+        SUM(s.real_salary) AS `real`
+        FROM department d
+        LEFT JOIN employee e
+        ON e.department_id = d.id
+        LEFT JOIN salary s
+        ON s.employee_id = e.id
+        GROUP BY
+        d.id,
+        d.department_name
+
+    </select>
+
+
+    <!-- ===================================================== -->
+    <!-- 当月工资 -->
+    <!-- ===================================================== -->
+
+    <select id="getCurrentMonthSalary"
+            resultType="com.example.demo.pojo.salary">
+
+        SELECT *
+        FROM salary
+        WHERE DATE_FORMAT(create_time, '%Y-%m')
+        = DATE_FORMAT(NOW(), '%Y-%m')
+        ORDER BY create_time DESC
+
+    </select>
+
+
+    <!-- 当月工资统计 -->
+    <select id="getMonthSalary"
+            resultType="com.example.demo.pojo.SCount">
+
+        SELECT
+        COUNT(
+        CASE
+        WHEN salary_status = '待发放'
+        THEN 1
+        END
+        ) AS pendingCount,
+
+        IFNULL(
+        SUM(
+        CASE
+        WHEN salary_status = '已发放'
+        THEN real_salary
+        END
+        ),
+        0
+        ) AS paidSalary,
+
+        IFNULL(
+        SUM(
+        CASE
+        WHEN salary_status = '待发放'
+        THEN real_salary
+        END
+        ),
+        0
+        ) AS pendingAmount
+
+        FROM salary
+
+        WHERE salary_month =
+        DATE_FORMAT(NOW(), '%Y-%m')
+
+    </select>
+
+
+    <!-- ===================================================== -->
+    <!-- 工资录入 -->
+    <!-- ===================================================== -->
+
+    <!-- 查询工资录入记录 -->
+    <select id="getSalaryList"
+            resultType="map">
+
+        SELECT
+        s.id,
+        s.employee_id AS employeeId,
+        e.name AS name,
+        s.salary_month AS salaryMonth,
+        s.attendance_days AS attendanceDays,
+        s.base_salary AS baseSalary,
+        s.bonus,
+        s.deduction,
+        s.tax,
+        s.real_salary AS realSalary,
+        s.salary_status AS salaryStatus,
+        s.create_time AS createTime
+
+        FROM salary s
+
+        LEFT JOIN employee e
+        ON s.employee_id = e.id
+
+        ORDER BY s.create_time DESC
+
+    </select>
+
+
+    <!-- 查询指定员工指定月份是否已经录入 -->
+    <select id="checkSalaryExists"
+            resultType="java.lang.Integer">
+
+        SELECT COUNT(*)
+        FROM salary
+
+        WHERE employee_id = #{employeeId}
+        AND salary_month = #{salaryMonth}
+
+    </select>
+
+
+    <!-- 手动插入工资 -->
+    <insert id="insertSalary"
+            parameterType="map">
+
+        INSERT INTO salary (
+        employee_id,
+        salary_month,
+        attendance_days,
+        base_salary,
+        bonus,
+        deduction,
+        tax,
+        real_salary,
+        salary_status,
+        create_time
+        )
+
+        VALUES (
+        #{employeeId},
+        #{salaryMonth},
+        #{attendanceDays},
+        #{baseSalary},
+        #{bonus},
+        #{deduction},
+        #{tax},
+        #{realSalary},
+        #{salaryStatus},
+        NOW()
+        )
+
+    </insert>
+
+
+    <!-- 查询全部员工 -->
+    <select id="getAllEmployees"
+            resultType="map">
+
+        SELECT
+        id,
+        name,
+        base_salary AS baseSalary
+        FROM employee
+        ORDER BY id
+
+    </select>
+    <!-- 查询指定月份已经录入工资的员工 -->
+    <select id="getExistingEmployeeIds"
+             resultType="java.lang.Long">
+    SELECT DISTINCT employee_id
+    FROM salary
+    WHERE salary_month = #{salaryMonth}
+
+    </select>
+    <!-- 查询指定月份奖金 -->
+    <select id="getMonthBonus"
+            resultType="map">
+
+        SELECT
+        employee_id AS employeeId,
+        IFNULL(SUM(money), 0) AS money
+        FROM bonus
+        WHERE DATE_FORMAT(bonus_month, '%Y-%m') = #{salaryMonth}
+        GROUP BY employee_id
+
+    </select>
+
+    <!-- 查询指定月份扣款 -->
+    <select id="getMonthDeduction" resultType="map">
+
+        SELECT
+        employee_id AS employeeId,
+        IFNULL(SUM(money), 0) AS money
+        FROM deduction
+        WHERE DATE_FORMAT(deduction_month, '%Y-%m') = #{salaryMonth}
+        GROUP BY employee_id
+
+    </select>
+    <insert id="batchInsertSalary">
+        INSERT INTO salary (
+        employee_id,
+        salary_month,
+        attendance_days,
+        base_salary,
+        bonus,
+        deduction,
+        tax,
+        real_salary,
+        salary_status
+        )
+        VALUES
+        <foreach collection="list" item="salary" separator=",">
+            (
+            #{salary.employeeId},
+            #{salary.salaryMonth},
+            #{salary.attendanceDays},
+            #{salary.baseSalary},
+            #{salary.bonus},
+            #{salary.deduction},
+            #{salary.tax},
+            #{salary.realSalary},
+            #{salary.salaryStatus}
+            )
+        </foreach>
+    </insert>
+</mapper>

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.SalaryMapper">
+    <!-- =====================================================
+         查询工资记录
+         ===================================================== -->
+    <select id="getSalaryList" resultType="map">
+        SELECT
+        s.id,
+        s.employee_id AS employeeId,
+        e.name AS name,
+        s.salary_month AS salaryMonth,
+        s.attendance_days AS attendanceDays,
+        s.base_salary AS baseSalary,
+        s.bonus,
+        s.deduction,
+        s.tax,
+        s.real_salary AS realSalary,
+        s.salary_status AS salaryStatus,
+        s.create_time AS createTime
+        FROM salary s
+        LEFT JOIN employee e
+        ON s.employee_id = e.id
+        ORDER BY s.create_time DESC
+    </select>
+
+
+    <!-- =====================================================
+         检查工资是否已经存在
+         ===================================================== -->
+
+    <select id="checkSalaryExists"
+            resultType="int">
+
+        SELECT COUNT(1)
+        FROM salary
+        WHERE employee_id = #{employeeId}
+        AND salary_month = #{salaryMonth}
+
+    </select>
+
+
+    <!-- =====================================================
+         手动插入工资
+         ===================================================== -->
+
+    <insert id="insertSalary"
+            parameterType="map">
+
+        INSERT INTO salary (
+        employee_id,
+        salary_month,
+        attendance_days,
+        base_salary,
+        bonus,
+        deduction,
+        tax,
+        real_salary,
+        salary_status,
+        create_time
+        )
+        VALUES (
+        #{employeeId},
+        #{salaryMonth},
+        #{attendanceDays},
+        #{baseSalary},
+        #{bonus},
+        #{deduction},
+        #{tax},
+        #{realSalary},
+        #{salaryStatus},
+        NOW()
+        )
+
+    </insert>
+
+
+    <!-- =====================================================
+         查询全部员工
+         ===================================================== -->
+
+    <select id="getAllEmployees"
+            resultType="map">
+
+        SELECT
+        id,
+        name,
+        base_salary AS baseSalary
+        FROM employee
+        ORDER BY id
+
+    </select>
+
+
+    <!-- =====================================================
+         查询已经录入工资的员工
+         ===================================================== -->
+
+    <select id="getExistingEmployeeIds"
+            resultType="long">
+
+        SELECT employee_id
+        FROM salary
+        WHERE salary_month = #{salaryMonth}
+
+    </select>
+
+
+    <!-- =====================================================
+         查询上月奖金
+         ===================================================== -->
+
+    <select id="getMonthBonus"
+            resultType="map">
+
+        SELECT
+        employee_id AS employeeId,
+        SUM(money) AS money
+        FROM bonus
+        WHERE DATE_FORMAT(
+        bonus_month,
+        '%Y-%m'
+        ) = #{salaryMonth}
+        GROUP BY employee_id
+
+    </select>
+
+
+    <!-- =====================================================
+         查询上月扣款
+         ===================================================== -->
+
+    <select id="getMonthDeduction"
+            resultType="map">
+
+        SELECT
+        employee_id AS employeeId,
+        SUM(money) AS money
+        FROM deduction
+        WHERE DATE_FORMAT(
+        deduction_month,
+        '%Y-%m'
+        ) = #{salaryMonth}
+        GROUP BY employee_id
+
+    </select>
+
+
+    <!-- =====================================================
+         批量插入工资
+         ===================================================== -->
+
+    <insert id="batchInsertSalary">
+
+        INSERT INTO salary (
+        employee_id,
+        salary_month,
+        attendance_days,
+        base_salary,
+        bonus,
+        deduction,
+        tax,
+        real_salary,
+        salary_status,
+        create_time
+        )
+        VALUES
+
+        <foreach
+                collection="list"
+                item="item"
+                separator=",">
+
+            (
+            #{item.employeeId},
+            #{item.salaryMonth},
+            #{item.attendanceDays},
+            #{item.baseSalary},
+            #{item.bonus},
+            #{item.deduction},
+            #{item.tax},
+            #{item.realSalary},
+            #{item.salaryStatus},
+            NOW()
+            )
+
+        </foreach>
+
+    </insert>
+
+</mapper>

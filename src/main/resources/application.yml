@@ -1,0 +1,6 @@
+#阿里云
+aliyun:
+  oss:
+    endpoint: "https://oss-cn-beijing.aliyuncs.com"
+    bucketName: "java-student-ai"
+    region : "cn-beijing"
